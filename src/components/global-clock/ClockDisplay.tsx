@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { FC } from 'react';
@@ -12,10 +13,18 @@ interface ClockDisplayProps {
   ianaTimezone: string;
 }
 
+interface ParsedTime {
+  hours: string;
+  minutes: string;
+  seconds: string;
+  ampm: string;
+}
+
 const ClockDisplay: FC<ClockDisplayProps> = ({ label, ianaTimezone }) => {
   const [timeString, setTimeString] = useState<string | null>(null);
   const [dateString, setDateString] = useState<string | null>(null);
   const [daylight, setDaylight] = useState<boolean | null>(null);
+  const [parsedTime, setParsedTime] = useState<ParsedTime | null>(null);
 
   useEffect(() => {
     const updateDateTime = () => {
@@ -26,24 +35,39 @@ const ClockDisplay: FC<ClockDisplayProps> = ({ label, ianaTimezone }) => {
       setDaylight(isDaylight(now, ianaTimezone));
     };
 
-    // Initial call to set time immediately
-    updateDateTime();
-
+    updateDateTime(); // Initial call
     const intervalId = setInterval(updateDateTime, 1000);
     return () => clearInterval(intervalId);
   }, [ianaTimezone]);
 
-  if (timeString === null || dateString === null || daylight === null) {
+  useEffect(() => {
+    if (timeString) {
+      const match = timeString.match(/(\d{1,2}):(\d{2}):(\d{2})\s(AM|PM)/i);
+      if (match) {
+        setParsedTime({
+          hours: match[1],
+          minutes: match[2],
+          seconds: match[3],
+          ampm: match[4],
+        });
+      } else {
+        // Fallback if regex fails, though unlikely for 'en-US' locale format
+        setParsedTime(null); 
+      }
+    }
+  }, [timeString]);
+
+  if (timeString === null || dateString === null || daylight === null || (timeString && !parsedTime)) {
     return (
       <Card className="w-full shadow-xl bg-card/80 backdrop-blur-sm">
-        <CardHeader>
-          <Skeleton className="h-8 w-3/4" />
-          <Skeleton className="h-4 w-1/2 mt-1" />
+        <CardHeader className="text-center pb-2">
+          <Skeleton className="h-8 w-3/4 mx-auto" />
+          <Skeleton className="h-4 w-1/2 mx-auto mt-1" />
         </CardHeader>
-        <CardContent className="flex flex-col items-center space-y-4">
+        <CardContent className="flex flex-col items-center space-y-3 pt-0">
           <Skeleton className="h-16 w-3/4" />
           <Skeleton className="h-6 w-full" />
-          <Skeleton className="h-2 w-full mt-2" />
+          <Skeleton className="h-2.5 w-full mt-2" />
         </CardContent>
       </Card>
     );
@@ -56,13 +80,22 @@ const ClockDisplay: FC<ClockDisplayProps> = ({ label, ianaTimezone }) => {
         <CardDescription className="text-sm text-muted-foreground">{dateString}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center space-y-3 pt-0">
-        <div className="text-6xl font-mono font-bold text-foreground tabular-nums tracking-tight">
-          {timeString.split(':').map((part, index) => (
-            <React.Fragment key={index}>
-              <span>{part}</span>
-              {index < 2 && <span className="opacity-50">:</span>}
-            </React.Fragment>
-          ))}
+        <div className="text-6xl font-mono font-bold text-foreground tabular-nums tracking-tight flex items-baseline justify-center">
+          {parsedTime ? (
+            <>
+              <span>{parsedTime.hours}</span>
+              <span className="opacity-50 text-5xl self-center mx-px">:</span>
+              <span>{parsedTime.minutes}</span>
+              <span className="opacity-50 text-5xl self-center mx-px">:</span>
+              <span>{parsedTime.seconds}</span>
+              {parsedTime.ampm && (
+                <span className="text-4xl ml-1.5 font-medium">{parsedTime.ampm}</span>
+              )}
+            </>
+          ) : (
+            // Fallback, though skeleton should catch this state
+            <span>{timeString}</span>
+          )}
         </div>
         
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
