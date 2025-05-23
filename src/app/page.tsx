@@ -11,16 +11,20 @@ export default function HomePage() {
   const [currentDateForStaticClocks, setCurrentDateForStaticClocks] = useState<Date | null>(null);
 
   useEffect(() => {
-    // Set this once on mount to ensure all static clocks are relative to the same "today"
-    // This ensures client-side determination of "today"
     setCurrentDateForStaticClocks(new Date());
   }, []);
+
+  const staticRowBackgroundColors = [
+    'bg-slate-50',   // Very light gray
+    'bg-emerald-50', // Very light green
+    'bg-white',       // White (will blend with page background)
+    'bg-pink-50'      // Very light pink
+  ];
 
   const staticRowsData = React.useMemo(() => {
     if (!currentDateForStaticClocks) return [];
 
-    // Determine "today's" date components in India
-    const indianDateFormatter = new Intl.DateTimeFormat('en-CA', { // en-CA gives YYYY-MM-DD
+    const indianDateFormatter = new Intl.DateTimeFormat('en-CA', {
       timeZone: 'Asia/Kolkata',
       year: 'numeric',
       month: '2-digit',
@@ -28,18 +32,17 @@ export default function HomePage() {
     });
     const [yearStr, monthStr, dayStr] = indianDateFormatter.format(currentDateForStaticClocks).split('-');
     const year = parseInt(yearStr);
-    const month = parseInt(monthStr) - 1; // JS Date months are 0-indexed
+    const month = parseInt(monthStr) - 1;
     const day = parseInt(dayStr);
 
-    // New base time: 4:30 PM IST. IST is UTC+5:30.
-    // So, 4:30 PM (16:30) IST = 11:00 UTC.
+    // Base time: 4:30 PM IST (16:30 IST = 11:00 UTC)
     const baseUTCHour = 11;
     const baseUTCMinute = 0;
 
-    // Generate times from 4:30 PM IST (16:30) to 11:30 PM IST (23:30)
+    // From 4:30 PM IST (16:30) to 11:30 PM IST (23:30)
     // This is 7 hours, which is 14 intervals of 30 minutes.
-    // So, 15 rows are needed (inclusive of the start time).
-    const numberOfRows = 15; 
+    // So, 15 rows are needed.
+    const numberOfRows = 15;
 
     return Array.from({ length: numberOfRows }).map((_, index) => {
       const minutesOffset = index * 30;
@@ -53,7 +56,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col items-start min-h-screen p-4 sm:p-8 bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
       {/* Real-time clocks row - Highlighted */}
-      <div className="flex flex-row gap-6 p-2 rounded-md bg-yellow-300 text-yellow-950 mb-2">
+      <div className="flex flex-row gap-6 p-2 rounded-md bg-yellow-300 text-yellow-950 mb-2 w-full sm:w-auto">
         <ClockDisplay
           key="india-realtime"
           label="IST"
@@ -69,38 +72,46 @@ export default function HomePage() {
       </div>
 
       {/* Static clocks rows */}
-      {currentDateForStaticClocks ? (
-        staticRowsData.map((rowData, index) => (
-          <div key={`static-row-${index}`} className="flex flex-row gap-6 mt-2">
-            <ClockDisplay
-              label="IST"
-              ianaTimezone={INDIA_TIMEZONE.value}
-              fixedDateTime={rowData.indiaTime}
-            />
-            {easternTimezoneDetails && (
-              <ClockDisplay
-                label="ET"
-                ianaTimezone={easternTimezoneDetails.value}
-                fixedDateTime={rowData.indiaTime} // Pass the same Date object for ET conversion
-              />
-            )}
-          </div>
-        ))
-      ) : (
-        // Skeletons for static rows while currentDateForStaticClocks is loading
-        Array.from({ length: 15 }).map((_, i) => ( // Match the number of rows for skeletons
-          <div key={`skel-row-${i}`} className="flex flex-row gap-6 mt-2">
-            <div className="flex items-baseline space-x-2 p-1 min-w-[200px]">
-              <Skeleton className="h-6 w-8" />
-              <Skeleton className="h-7 w-36" />
+      <div className="w-full sm:w-auto"> {/* Container for static rows to manage borders */}
+        {currentDateForStaticClocks ? (
+          staticRowsData.map((rowData, index) => {
+            const bgColorClass = staticRowBackgroundColors[index % staticRowBackgroundColors.length];
+            return (
+              <div 
+                key={`static-row-${index}`} 
+                className={`flex flex-row gap-6 p-2 border-b border-slate-200 ${bgColorClass} last:border-b-0`}
+              >
+                <ClockDisplay
+                  label="IST"
+                  ianaTimezone={INDIA_TIMEZONE.value}
+                  fixedDateTime={rowData.indiaTime}
+                />
+                {easternTimezoneDetails && (
+                  <ClockDisplay
+                    label="ET"
+                    ianaTimezone={easternTimezoneDetails.value}
+                    fixedDateTime={rowData.indiaTime} 
+                  />
+                )}
+              </div>
+            );
+          })
+        ) : (
+          // Skeletons for static rows
+          Array.from({ length: 15 }).map((_, i) => (
+            <div key={`skel-row-${i}`} className="flex flex-row gap-6 p-2 border-b border-slate-200 last:border-b-0">
+              <div className="flex items-baseline space-x-2 p-1 min-w-[200px]">
+                <Skeleton className="h-6 w-8" />
+                <Skeleton className="h-7 w-36" />
+              </div>
+              <div className="flex items-baseline space-x-2 p-1 min-w-[200px]">
+                <Skeleton className="h-6 w-8" />
+                <Skeleton className="h-7 w-36" />
+              </div>
             </div>
-            <div className="flex items-baseline space-x-2 p-1 min-w-[200px]">
-              <Skeleton className="h-6 w-8" />
-              <Skeleton className="h-7 w-36" />
-            </div>
-          </div>
-        ))
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 }
