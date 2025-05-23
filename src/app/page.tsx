@@ -51,8 +51,8 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col items-start min-h-screen p-4 sm:p-8 bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
-      {/* Real-time clocks row */}
-      <div className="flex flex-row gap-6">
+      {/* Real-time clocks row - Highlighted */}
+      <div className="flex flex-row gap-6 p-2 rounded-md bg-muted mb-2">
         <ClockDisplay
           key="india-realtime"
           label="IST"
