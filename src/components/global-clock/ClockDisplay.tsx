@@ -3,12 +3,11 @@
 
 import type { FC } from 'react';
 import React, { useState, useEffect } from 'react';
-import { Sun, Moon } from 'lucide-react';
-import { getFormattedDateTime, isDaylight } from '@/lib/timezones';
+import { getFormattedDateTime } from '@/lib/timezones';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface ClockDisplayProps {
-  label: string;
+  label: string; // Will be "IST" or "ET"
   ianaTimezone: string;
 }
 
@@ -21,17 +20,14 @@ interface ParsedTime {
 
 const ClockDisplay: FC<ClockDisplayProps> = ({ label, ianaTimezone }) => {
   const [timeString, setTimeString] = useState<string | null>(null);
-  const [dateString, setDateString] = useState<string | null>(null);
-  const [daylight, setDaylight] = useState<boolean | null>(null);
   const [parsedTime, setParsedTime] = useState<ParsedTime | null>(null);
 
   useEffect(() => {
     const updateDateTime = () => {
       const now = new Date();
-      const { timeString: newTimeString, dateString: newDateString } = getFormattedDateTime(now, ianaTimezone);
+      // We only need the timeString from this utility function now
+      const { timeString: newTimeString } = getFormattedDateTime(now, ianaTimezone);
       setTimeString(newTimeString);
-      setDateString(newDateString);
-      setDaylight(isDaylight(now, ianaTimezone));
     };
 
     updateDateTime(); // Initial call
@@ -50,42 +46,28 @@ const ClockDisplay: FC<ClockDisplayProps> = ({ label, ianaTimezone }) => {
           ampm: match[4],
         });
       } else {
-        setParsedTime(null);
+        setParsedTime(null); // Should not happen with expected format
       }
     }
   }, [timeString]);
 
-  if (timeString === null || dateString === null || daylight === null || (timeString && !parsedTime)) {
+  if (!parsedTime) { // Simplified loading state, rely on parsedTime
     return (
-      <div className="flex items-baseline space-x-2 p-2 rounded-md">
-        <Skeleton className="h-6 w-20" /> {/* Label */}
-        <Skeleton className="h-7 w-28" /> {/* Time */}
-        <Skeleton className="h-5 w-24" /> {/* Date */}
-        <Skeleton className="h-5 w-5 rounded-full" /> {/* Icon */}
+      <div className="flex items-baseline space-x-2 p-1">
+        <Skeleton className="h-6 w-8" /> {/* Label (IST/ET) */}
+        <Skeleton className="h-7 w-36" /> {/* Time (HH:MM:SS AM/PM) */}
       </div>
     );
   }
 
   return (
     <div className="flex items-baseline space-x-2 text-foreground p-1">
-      <span className="font-semibold text-lg">{label}:</span>
-      {parsedTime ? (
-        <>
-          <span className="text-2xl font-mono tabular-nums tracking-tight">
-            {parsedTime.hours}<span className="opacity-70">:</span>{parsedTime.minutes}<span className="opacity-70">:</span>{parsedTime.seconds}
-          </span>
-          <span className="text-xl font-medium">{parsedTime.ampm}</span>
-        </>
-      ) : (
-        // Fallback, should ideally not be hit if skeleton catches loading state
-        <span className="text-2xl font-mono tabular-nums tracking-tight">{timeString}</span>
-      )}
-      <span className="text-sm text-muted-foreground ml-1">({dateString})</span>
-      {daylight !== null && (
-        <span className="text-sm ml-1">
-          {daylight ? <Sun className="w-4 h-4 inline text-yellow-400" /> : <Moon className="w-4 h-4 inline text-blue-400" />}
-        </span>
-      )}
+      <span className="font-semibold text-lg">{label}</span> {/* Display label directly, no colon */}
+      {/* Parsed time display */}
+      <span className="text-2xl font-mono tabular-nums tracking-tight">
+        {parsedTime.hours}<span className="opacity-70">:</span>{parsedTime.minutes}<span className="opacity-70">:</span>{parsedTime.seconds}
+      </span>
+      <span className="text-xl font-medium">{parsedTime.ampm}</span>
     </div>
   );
 };
