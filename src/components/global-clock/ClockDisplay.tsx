@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 interface ClockDisplayProps {
   label: string; // Will be "IST" or "ET"
   ianaTimezone: string;
+  fixedDateTime?: Date; // Optional: if provided, displays this static time
 }
 
 interface ParsedTime {
@@ -18,22 +19,24 @@ interface ParsedTime {
   ampm: string;
 }
 
-const ClockDisplay: FC<ClockDisplayProps> = ({ label, ianaTimezone }) => {
+const ClockDisplay: FC<ClockDisplayProps> = ({ label, ianaTimezone, fixedDateTime }) => {
   const [timeString, setTimeString] = useState<string | null>(null);
   const [parsedTime, setParsedTime] = useState<ParsedTime | null>(null);
 
   useEffect(() => {
     const updateDateTime = () => {
-      const now = new Date();
-      // We only need the timeString from this utility function now
-      const { timeString: newTimeString } = getFormattedDateTime(now, ianaTimezone);
+      const dateToUse = fixedDateTime || new Date(); // Use fixedDateTime if provided, else current time
+      const { timeString: newTimeString } = getFormattedDateTime(dateToUse, ianaTimezone);
       setTimeString(newTimeString);
     };
 
     updateDateTime(); // Initial call
-    const intervalId = setInterval(updateDateTime, 1000);
-    return () => clearInterval(intervalId);
-  }, [ianaTimezone]);
+
+    if (!fixedDateTime) { // Only set interval if not a fixed time
+      const intervalId = setInterval(updateDateTime, 1000);
+      return () => clearInterval(intervalId);
+    }
+  }, [ianaTimezone, fixedDateTime]); // Add fixedDateTime to dependency array
 
   useEffect(() => {
     if (timeString) {
@@ -46,12 +49,13 @@ const ClockDisplay: FC<ClockDisplayProps> = ({ label, ianaTimezone }) => {
           ampm: match[4],
         });
       } else {
-        setParsedTime(null); // Should not happen with expected format
+        // Fallback for safety, though expected format should match
+        setParsedTime({ hours: '--', minutes: '--', seconds: '--', ampm: '--' });
       }
     }
   }, [timeString]);
 
-  if (!parsedTime) { // Simplified loading state, rely on parsedTime
+  if (!parsedTime) {
     return (
       <div className="flex items-baseline space-x-2 p-1">
         <Skeleton className="h-6 w-8" /> {/* Label (IST/ET) */}
@@ -61,9 +65,8 @@ const ClockDisplay: FC<ClockDisplayProps> = ({ label, ianaTimezone }) => {
   }
 
   return (
-    <div className="flex items-baseline space-x-2 text-foreground p-1">
-      <span className="font-semibold text-lg">{label}</span> {/* Display label directly, no colon */}
-      {/* Parsed time display */}
+    <div className="flex items-baseline space-x-2 text-foreground p-1 min-w-[200px]"> {/* Added min-width for consistency */}
+      <span className="font-semibold text-lg w-8">{label}</span> {/* Fixed width for label */}
       <span className="text-2xl font-mono tabular-nums tracking-tight">
         {parsedTime.hours}<span className="opacity-70">:</span>{parsedTime.minutes}<span className="opacity-70">:</span>{parsedTime.seconds}
       </span>
