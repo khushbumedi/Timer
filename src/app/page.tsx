@@ -5,7 +5,6 @@ import React, { useState, useMemo } from 'react';
 import ClockDisplay from '@/components/global-clock/ClockDisplay';
 import TimezoneSelector from '@/components/global-clock/TimezoneSelector';
 import { US_TIMEZONES, INDIA_TIMEZONE, type TimezoneOption } from '@/lib/timezones';
-import { Globe } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function HomePage() {
@@ -16,23 +15,11 @@ export default function HomePage() {
   }, [selectedUsTimezoneValue]);
 
   return (
-    <div className="flex flex-col items-center min-h-screen p-4 sm:p-8 bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
-      <header className="mb-10 sm:mb-16 text-center">
-        <div className="flex items-center justify-center space-x-3">
-          <Globe className="w-12 h-12 sm:w-16 sm:h-16 text-primary animate-pulse" />
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight">
-            Global<span className="text-primary">Clock</span>
-          </h1>
-        </div>
-        <p className="mt-3 text-lg sm:text-xl text-muted-foreground">
-          Track time across the globe, effortlessly.
-        </p>
-      </header>
-
-      <main className="w-full max-w-5xl">
+    <div className="flex justify-start items-start min-h-screen p-4 sm:p-8 bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
+      <div className="w-full max-w-sm">
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm">
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="flex flex-col gap-6">
               <section aria-labelledby="india-clock-heading">
                  <h2 id="india-clock-heading" className="sr-only">India Time</h2>
                 <ClockDisplay
@@ -61,11 +48,7 @@ export default function HomePage() {
             </div>
           </CardContent>
         </Card>
-      </main>
-
-      <footer className="mt-16 text-center text-sm text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} GlobalClock. All rights reserved.</p>
-      </footer>
+      </div>
     </div>
   );
 }
