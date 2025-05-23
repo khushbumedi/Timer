@@ -31,14 +31,15 @@ export default function HomePage() {
     const month = parseInt(monthStr) - 1; // JS Date months are 0-indexed
     const day = parseInt(dayStr);
 
-    // Base time is 3:00 PM IST. IST is UTC+5:30.
-    // So, 3:00 PM (15:00) IST = 9:30 UTC.
-    const baseUTCHour = 9;
-    const baseUTCMinute = 30;
+    // New base time: 4:30 PM IST. IST is UTC+5:30.
+    // So, 4:30 PM (16:30) IST = 11:00 UTC.
+    const baseUTCHour = 11;
+    const baseUTCMinute = 0;
 
-    // Generate times from 3:00 PM IST (15:00) to 11:30 PM IST (23:30)
-    // This is 18 intervals of 30 minutes.
-    const numberOfRows = 18; 
+    // Generate times from 4:30 PM IST (16:30) to 11:30 PM IST (23:30)
+    // This is 7 hours, which is 14 intervals of 30 minutes.
+    // So, 15 rows are needed (inclusive of the start time).
+    const numberOfRows = 15; 
 
     return Array.from({ length: numberOfRows }).map((_, index) => {
       const minutesOffset = index * 30;
@@ -87,7 +88,7 @@ export default function HomePage() {
         ))
       ) : (
         // Skeletons for static rows while currentDateForStaticClocks is loading
-        Array.from({ length: 18 }).map((_, i) => ( // Match the number of rows for skeletons
+        Array.from({ length: 15 }).map((_, i) => ( // Match the number of rows for skeletons
           <div key={`skel-row-${i}`} className="flex flex-row gap-6 mt-2">
             <div className="flex items-baseline space-x-2 p-1 min-w-[200px]">
               <Skeleton className="h-6 w-8" />
