@@ -36,7 +36,11 @@ export default function HomePage() {
     const baseUTCHour = 9;
     const baseUTCMinute = 30;
 
-    return Array.from({ length: 10 }).map((_, index) => {
+    // Generate times from 3:00 PM IST (15:00) to 11:30 PM IST (23:30)
+    // This is 18 intervals of 30 minutes.
+    const numberOfRows = 18; 
+
+    return Array.from({ length: numberOfRows }).map((_, index) => {
       const minutesOffset = index * 30;
       const currentStaticTime = new Date(Date.UTC(year, month, day, baseUTCHour, baseUTCMinute + minutesOffset, 0));
       return {
@@ -83,7 +87,7 @@ export default function HomePage() {
         ))
       ) : (
         // Skeletons for static rows while currentDateForStaticClocks is loading
-        Array.from({ length: 10 }).map((_, i) => (
+        Array.from({ length: 18 }).map((_, i) => ( // Match the number of rows for skeletons
           <div key={`skel-row-${i}`} className="flex flex-row gap-6 mt-2">
             <div className="flex items-baseline space-x-2 p-1 min-w-[200px]">
               <Skeleton className="h-6 w-8" />
